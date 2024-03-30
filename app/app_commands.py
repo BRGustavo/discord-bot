@@ -8,7 +8,7 @@ class Comandos(commands.Cog):
 
     @commands.command()
     @verify_channel_allowed()
-    async def ola(self, ctx:commands.Context):
+    async def ola(self, ctx:commands.Context) -> None:
         await ctx.send("Olá!")
 
 @commands.Cog.listener()
