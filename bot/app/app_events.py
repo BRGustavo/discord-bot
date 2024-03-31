@@ -14,6 +14,20 @@ class Eventos(commands.Cog):
         await self.bot.change_presence(
             activity=discord.Game("Grand Theft Auto San Andreas")
         )
+        
+    @commands.Cog.listener()
+    async def on_member_remove(self, member:discord.Member):
+        guild = member.guild 
+        channel = member.guild.system_channel
+
+        await channel.send(f"O usuário {member.mention} saiu do servidor!")     
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member:discord.Member):
+        guild = member.guild 
+        channel = member.guild.system_channel
+
+        await channel.send(f"O usuário {member.mention} entrou do servidor! Seja Bem-Vindo(a)!")        
 
     @commands.Cog.listener()
     async def on_message(self, message:discord.Message) -> None:
@@ -21,7 +35,7 @@ class Eventos(commands.Cog):
         Args:
             message (discrod.Message): Objeto contendo informações da mensagem.
         """
-        if message.author == self.bot.user and "Just joined the server From" in message.content:
+        if message.author == self.bot.user and ("Just joined the server From" in message.content or "Has joined the Zombie Survival Mode" in message.content):
             await message.channel.send("!m wb")
 
         elif message.author == self.bot.user:
