@@ -2,12 +2,15 @@ version: "3.7"
 services:
   database:
     image: postgres
+    container_name: database_postgres
     restart: always
     environment:
       POSTGRES_PASSWORD: adm_discord
     ports: 
       - "5432:5432"
-    
+    networks:
+      - db_network
+      
   discord_app:
     build: "./bot"
     container_name: "discord_app"
@@ -16,4 +19,29 @@ services:
       - "./bot:/app"
     depends_on:
       - database
+    networks:
+      - db_network
 
+  discord_django:
+    build: "./api"
+    container_name: "discord_django"
+    restart: always
+    ports: 
+      - "8000:8000"
+    networks:
+      - db_network
+    volumes:
+      - "./api:/app"
+    depends_on:
+      - discord_app
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h database -p 5432 -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: >
+      bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+
+networks:
+  db_network:
+    driver: bridge
