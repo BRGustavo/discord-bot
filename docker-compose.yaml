@@ -12,18 +12,18 @@ services:
       - db_network
       
   discord_app:
-    build: "./bot"
+    build: "./discord-bot"
     container_name: "discord_app"
     restart: always
     volumes: 
-      - "./bot:/app"
+      - "./discord-bot:/app"
     depends_on:
       - database
     networks:
       - db_network
 
-  discord_django:
-    build: "./api"
+  apidjango:
+    build: "./endpoints"
     container_name: "discord_django"
     restart: always
     ports: 
@@ -31,7 +31,7 @@ services:
     networks:
       - db_network
     volumes:
-      - "./api:/app"
+      - "./endpoints:/app"
     depends_on:
       - discord_app
     healthcheck:
@@ -40,7 +40,7 @@ services:
       timeout: 5s
       retries: 5
     command: >
-      bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+      bash -c "python manage.py makemigrations --noinput && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
 
 networks:
   db_network:

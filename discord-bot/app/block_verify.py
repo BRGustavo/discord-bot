@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import json
 
+
 def verify_channel_allowed():
     async def check(ctx):
         with open("./channels.json", "r") as file:

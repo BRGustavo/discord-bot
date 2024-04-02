@@ -11,6 +11,16 @@ DEBUG=os.getenv("DEBUG")
 
 ALLOWED_HOSTS = ["*"]
 
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'api_key': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization'
+        }
+    },
+    'REFETCH_SCHEMA_WITH_AUTH': True,
+}
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -19,7 +29,24 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'core',
+    'drf_yasg',
 ]
+
+OPENAPI_JWT_AUTH = {
+    'JWT_AUTH_HEADER_PREFIX': 'Bearer',
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -32,6 +59,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'api_discord.urls'
+
 
 TEMPLATES = [
     {

@@ -1,6 +1,10 @@
 import discord
 from discord.ext import commands
 from app import eventos_cog, comandos_cog
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 intents = discord.Intents.all()
 bot_gustavo = commands.Bot(command_prefix='!', intents=intents)
@@ -18,5 +22,4 @@ async def on_command_error(ctx, error):
 bot_gustavo.add_cog(eventos_cog(bot_gustavo))
 bot_gustavo.add_cog(comandos_cog(bot_gustavo))
 
-with open("password.txt", "r") as file:
-    bot_gustavo.run(str(file.read()).strip())    
+bot_gustavo.run(str(os.getenv("TOKEN_DISCORD")).strip())    

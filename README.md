@@ -1,8 +1,10 @@
-# Discord bot de comunidade
+# BGTDM Discord Bot Community
 
 ![discord-image](https://bs-uploads.toptal.io/blackfish-uploads/components/seo/5948054/og_image/optimized/how-to-make-a-discord-bot-7c0fe302b98b05b145682344b3a4ec59.png)
 
-<p>Bot de resposta a comandos e mensagens dentro de uma comunidade do discord.</p>
+<p>
+Este projeto foi desenvolvido para facilitar o controle e a gestão de uma comunidade de jogos do GTA SAMP (BGTDM Community). Com este bot, você pode gerenciar eficientemente a entrada e saída de novos usuários, fornecendo mensagens personalizadas de boas-vindas e despedida. Além disso, é possível criar comandos personalizados para interagir com os jogadores e oferecer à alta administração controle total sobre os usuários da comunidade.
+</p>
 
 ## Índice
 - <a href="#howUse">Como realizar a instalação?</a>
