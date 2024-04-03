@@ -20,7 +20,16 @@ class Comandos(commands.Cog):
     @commands.is_owner()
     async def cc(self, ctx:commands.Context, qtd:int):
         await ctx.channel.purge(limit=qtd+1)
-        
+    
+    @commands.command()
+    async def helper(self, ctx):
+        print("ok", flush=True)
+        guils_item = self.bot.guilds
+
+        for guild in guils_item:
+            for member_value in guild.members:
+                print(member_value.name, flush=True)
+
 
 @commands.Cog.listener()
 async def on_command_error(ctx, error):

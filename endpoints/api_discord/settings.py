@@ -22,6 +22,11 @@ SWAGGER_SETTINGS = {
     'REFETCH_SCHEMA_WITH_AUTH': True,
 }
 
+OPENAPI_JWT_AUTH = {
+    'JWT_AUTH_HEADER_PREFIX': 'Bearer',
+}
+
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -34,10 +39,6 @@ INSTALLED_APPS = [
     'core',
     'drf_yasg',
 ]
-
-OPENAPI_JWT_AUTH = {
-    'JWT_AUTH_HEADER_PREFIX': 'Bearer',
-}
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [

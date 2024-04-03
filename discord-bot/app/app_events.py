@@ -4,8 +4,11 @@ import json
 import os
 import asyncio
 import aiohttp
+from aiohttp.client_exceptions import ContentTypeError
+
 
 class APICommunicate:
+
     def __init__(self):
         self.api_base_url = os.getenv("API_ENDPOINT")
 
@@ -34,6 +37,7 @@ class APICommunicate:
                         return_value = value_response.get("access","")
                         self.api_refresh_token = value_response.get("refresh", "")
                         self.__api_token = return_value
+
         except Exception as e:
             return_value = str(e)
         finally:
@@ -57,12 +61,24 @@ class APICommunicate:
                 }, 
                 json=json_content
             ) as response:
-                response_values = await response.json()
-                response_status = response.status
-                return {
-                    "status": int(response_status),
-                    "values": response_values
-                }
+                
+                try:
+                    response_values = await response.json()
+                    response_status = response.status
+
+                except ContentTypeError as e:
+                    response_content = await response.text()
+                    with open("remover.html", "w") as file:
+                        file.write(str(response_content))
+
+                    response_values = {}
+                    response_status = response.status
+
+                finally:
+                    return {
+                        "status": int(response_status),
+                        "values": response_values
+                    }
 
 class Eventos(commands.Cog):
     def __init__(self, bot:commands.Bot):
@@ -139,14 +155,27 @@ class Eventos(commands.Cog):
     async def save_community_info(self):
         bot_guilds = self.bot.guilds
 
+        api_connection = APICommunicate()
+        """Inserindo comunidades que o bot faz parte no banco."""
         for guild_item in bot_guilds:
-            api_connection = APICommunicate()
             response_value = await api_connection("POST", "api/community/", json_content={
-                "channel": str(guild_item.id),
+                "id_channel": str(guild_item.id),
                 "name": str(guild_item.name),
-                "owner_name": str(guild_item.owner)
+                "owner_name": str(guild_item.owner),
+                "created_at": str(guild_item.created_at.strftime("%Y-%m-%d"))
             })
-            print(f"Responsta: {response_value.get('status')}", flush=True)
+            if response_value.get("status", "") == 201:
+
+                "Inserindo usuários da nova comunidade no banco."
+                for member_info in guild_item.members:
+                    response_value = await api_connection("POST", "api/member/", json_content={
+                        "id_member": str(member_info.id),
+                        "nick": str(member_info.nick),
+                        "name": str(member_info.name),
+                        "descriminator": str(member_info.discriminator),
+                        "is_bot": member_info.bot
+                    }  )
+
             
 
 eventos_cog = Eventos
