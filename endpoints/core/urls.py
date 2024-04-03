@@ -1,11 +1,12 @@
 
 from django.urls import path, include
 from rest_framework import routers
-from .views import CommunityViewSet, MemberViewSet
+from .views import CommunityViewSet, MemberViewSet, ChannelViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 rota = routers.DefaultRouter()
 rota.register("community", CommunityViewSet, basename="Community")
+rota.register("channel", ChannelViewSet, basename="Channel")
 rota.register("member", MemberViewSet, basename="Member")
 
 

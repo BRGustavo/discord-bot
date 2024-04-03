@@ -159,22 +159,50 @@ class Eventos(commands.Cog):
         """Inserindo comunidades que o bot faz parte no banco."""
         for guild_item in bot_guilds:
             response_value = await api_connection("POST", "api/community/", json_content={
-                "id_channel": str(guild_item.id),
+                "community": str(guild_item.id),
                 "name": str(guild_item.name),
                 "owner_name": str(guild_item.owner),
                 "created_at": str(guild_item.created_at.strftime("%Y-%m-%d"))
             })
             if response_value.get("status", "") == 201:
+                await self.save_community_members(guild_item)
+                await self.save_community_channels(response_value.get("values",{}).get("id", None), guild_item)
+    
+    async def save_community_channels(self, db_id, guild):
+        api_connection = APICommunicate()
+        for channel_info in guild.channels:
+            
+            is_news_value = is_nsfw_value = False
+            try:
+                topic_value = channel_info.topic
+                is_news_value = channel_info.is_news
+                is_nsfw_value = channel_info.is_nsfw
 
-                "Inserindo usuários da nova comunidade no banco."
-                for member_info in guild_item.members:
-                    response_value = await api_connection("POST", "api/member/", json_content={
-                        "id_member": str(member_info.id),
-                        "nick": str(member_info.nick),
-                        "name": str(member_info.name),
-                        "descriminator": str(member_info.discriminator),
-                        "is_bot": member_info.bot
-                    }  )
+            except AttributeError:
+                topic_value = "Not set"
+            finally:
+                response_value = await api_connection("POST", "api/channel/", json_content={
+                "community_id": int(db_id),
+                "channel": str(channel_info.id),
+                "name": str(channel_info.name),
+                "topic": str(topic_value),
+                "is_news": bool(is_news_value),
+                "is_nsfw": bool(is_nsfw_value),
+                "position": int(channel_info.position),
+                "type": str(channel_info.type)              
+                })
+            
+
+    async def save_community_members(self, guild):
+        api_connection = APICommunicate()
+        for member_info in guild.members:
+            response_value = await api_connection("POST", "api/member/", json_content={
+                "id_member": str(member_info.id),
+                "nick": str(member_info.nick),
+                "name": str(member_info.name),
+                "descriminator": str(member_info.discriminator),
+                "is_bot": member_info.bot
+            })
 
             
 

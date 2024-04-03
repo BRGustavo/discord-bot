@@ -2,18 +2,36 @@ from django.db import models
 from datetime import datetime
 
 class Community(models.Model):
-    id_channel = models.CharField(max_length=50, unique=True)
+    community = models.CharField(max_length=50, unique=True)
     name = models.CharField(max_length=40, blank=False)
     owner_name = models.CharField(max_length=40, default="")
     created_at = models.DateField(null=True)
     insert_data = models.DateField(auto_now=True)
 
     def __str__(self):
-        return f"Community: {self.name} - {self.id_channel} - {self.owner_name}"
+        return f"{self.community} - {self.name}"
     
 
+class Channel(models.Model):
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    channel = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=100)
+    topic = models.CharField(max_length=255, default="Not set")
+    created_at = models.DateTimeField(default=datetime.now)
+    is_news = models.BooleanField(default=False)
+    is_nsfw = models.BooleanField(default=False)
+    position = models.IntegerField(default=0)
+    type = models.CharField(max_length=20, choices=(
+        ('text', 'Text'),
+        ('voice', 'Voice'),
+        ('category', 'Category')
+    ), default="text")
+
+    def __str__(self):
+        return f"Community: {self.community.name} channel: {self.channel} name: {self.name}"
+
 class Member(models.Model):
-    
+
     class Meta:
         verbose_name_plural = "Members"
 

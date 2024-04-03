@@ -23,12 +23,11 @@ class Comandos(commands.Cog):
     
     @commands.command()
     async def helper(self, ctx):
-        print("ok", flush=True)
         guils_item = self.bot.guilds
 
         for guild in guils_item:
-            for member_value in guild.members:
-                print(member_value.name, flush=True)
+            for channel in guild.channels:
+                print(channel.id, flush=True)
 
 
 @commands.Cog.listener()
