@@ -18,3 +18,4 @@ class MemberAdmin(admin.ModelAdmin):
 @admin.register(Channel)
 class ChannelAdmin(admin.ModelAdmin):
     list_display = ("channel", "name", "community", "topic", "type", "created_at")
+    search_fields = ("channel", "name")

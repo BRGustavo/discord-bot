@@ -14,12 +14,17 @@ class Community(models.Model):
 
 class Channel(models.Model):
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
-    channel = models.CharField(max_length=50, unique=True)
+    channel = models.CharField(max_length=50, unique=True, primary_key=True)
     name = models.CharField(max_length=100)
     topic = models.CharField(max_length=255, default="Not set")
     created_at = models.DateTimeField(default=datetime.now)
     is_news = models.BooleanField(default=False)
     is_nsfw = models.BooleanField(default=False)
+
+    is_welcome_channel = models.BooleanField(default=False)
+    is_remove_channel = models.BooleanField(default=False)
+    is_role_channel = models.BooleanField(default=False)
+    
     position = models.IntegerField(default=0)
     type = models.CharField(max_length=20, choices=(
         ('text', 'Text'),

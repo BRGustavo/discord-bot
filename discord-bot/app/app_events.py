@@ -5,85 +5,14 @@ import os
 import asyncio
 import aiohttp
 from aiohttp.client_exceptions import ContentTypeError
-
-
-class APICommunicate:
-
-    def __init__(self):
-        self.api_base_url = os.getenv("API_ENDPOINT")
-
-        self.__api_token = "0"
-        self.api_refresh_token = ""
-
-    async def generate_api_token(self) -> str:
-        """Função chamada para realizar a chamada do token de acesso ao API
-        Returns:
-            str: JWT Token access
-        """
-        return_value = ""
-        try:
-            async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False)) as session:
-                async with session.post(
-                    url=self.api_base_url+"/api/token/", 
-                    headers={"Host":"discordapp"},
-                    json={
-                        "username": os.getenv("API_USERNAME"),
-                        "password": os.getenv("API_PASSWORD")
-                    }
-                ) as response:
-                    
-                    if response.status == 200:
-                        value_response = await response.json()
-                        return_value = value_response.get("access","")
-                        self.api_refresh_token = value_response.get("refresh", "")
-                        self.__api_token = return_value
-
-        except Exception as e:
-            return_value = str(e)
-        finally:
-            return return_value
-
-    async def __call__(self, method:str="GET", endpoint:str="", json_content=None, header_values={"Content-Type": "application/json"}):
-        if len(self.api_base_url) <=0:
-            os.getenv("API_ENDPOINT")
-        
-        if self.__api_token == "0":
-            valor = await self.generate_api_token()
-
-        async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False)) as session:
-            async with session.request(
-                method, 
-                f"{self.api_base_url}/{endpoint}", 
-                headers={
-                    **header_values,
-                    "Authorization": f"Bearer {self.__api_token}",
-                    "Host":"discordapp"
-                }, 
-                json=json_content
-            ) as response:
-                
-                try:
-                    response_values = await response.json()
-                    response_status = response.status
-
-                except ContentTypeError as e:
-                    response_content = await response.text()
-                    with open("remover.html", "w") as file:
-                        file.write(str(response_content))
-
-                    response_values = {}
-                    response_status = response.status
-
-                finally:
-                    return {
-                        "status": int(response_status),
-                        "values": response_values
-                    }
+from app.block_verify import APICommunicate, LogChannel
+from logging import basicConfig, DEBUG, INFO, FileHandler, StreamHandler    
 
 class Eventos(commands.Cog):
     def __init__(self, bot:commands.Bot):
         self.bot = bot
         self.api_endpoint = os.getenv("API_ENDPOINT")
+        self.log = LogChannel("DiscordEvents")
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
@@ -91,6 +20,11 @@ class Eventos(commands.Cog):
         """
         await self.bot.change_presence(
             activity=discord.Game("Grand Theft Auto San Andreas")
+        )
+        basicConfig(
+            level=INFO,
+            format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s",
+            handlers=[FileHandler(r"log.txt", "a", "utf-8")]
         )
         await asyncio.sleep(1)
         await self.save_community_info()
@@ -100,14 +34,48 @@ class Eventos(commands.Cog):
         guild = member.guild 
         channel = member.guild.system_channel
 
-        await channel.send(f"O usuário {member.mention} saiu do servidor!")     
+        api_connection = APICommunicate()
+        response_values = await api_connection("GET", f"api/channel/?community={guild.id}", {})
+
+        if response_values.get("status", 0) == 200:
+            for response_item in response_values.get("values", []):
+                if response_item.get("is_remove_channel", False):
+                    embed = discord.Embed(
+                        description=f'{member.mention} Deixou o servidor!',
+                        color=discord.Color.blue()
+                    )
+                    embed.add_field(name="Até mais colega^!", value="", inline=True)  
+
+                    embed.set_footer(text=f'{guild.name} :P')
+                    embed.set_thumbnail(url=member.avatar_url)
+                    embed.set_author(name=guild.name, icon_url=guild.icon_url)
+                    msg_channel = await self.bot.fetch_channel(response_item.get("channel", 0))            
+                    await msg_channel.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_member_join(self, member:discord.Member):
         guild = member.guild 
         channel = member.guild.system_channel
 
-        await channel.send(f"O usuário {member.mention} entrou do servidor! Seja Bem-Vindo(a)!")        
+        api_connection = APICommunicate()
+        response_values = await api_connection("GET", f"api/channel/?community={guild.id}", {})
+
+        if response_values.get("status", 0) == 200:
+            for response_item in response_values.get("values", []):
+                if response_item.get("is_welcome_channel", False):
+                    embed = discord.Embed(
+                        description=f'{member.mention} Entrou no canal!',
+                        color=discord.Color.blue()
+                    )
+                    embed.add_field(name="Seja bem-vindo!", value="", inline=True)  
+
+                    embed.set_footer(text=f'{guild.name} :P')
+                    embed.set_thumbnail(url=member.avatar_url)
+                    embed.set_author(name=guild.name, icon_url=guild.icon_url)
+                    msg_channel = await self.bot.fetch_channel(response_item.get("channel", 0))            
+                    await msg_channel.send(embed=embed)
+        else:
+            self.log.send_message(f"An error occurred while sending the welcome message: Status: {response_values['status']} Error: {response_values.get('values')}", "error")
 
     @commands.Cog.listener()
     async def on_message(self, message:discord.Message) -> None:
@@ -121,8 +89,11 @@ class Eventos(commands.Cog):
         elif message.author == self.bot.user:
             return 
 
+        if "set me" in message.content.lower() or "veteran" in message.content.lower() or "set me veteran" in message.content.lower() or "veteran member" in message.content.lower():
+            await message.channel.send("no.")
+
         if message.guild is None:
-            print(f"{message.author} no canal privado: {message.content}", flush=True)
+            self.log.send_message(f"{message.author} no canal privado: {message.content}", "info")
 
     @commands.Cog.listener()
     async def on_member_update(self, before:discord.Member, after:discord.Member):
@@ -136,9 +107,30 @@ class Eventos(commands.Cog):
             roles_removed = [role.name for role in before.roles if role not in after.roles]
             roles_added = [role.name for role in after.roles if role not in before.roles]
 
-            await self.send_messge_adm(f"""
-                Opa! Passando para te avisar que os lvls do usuário {before.display_name} foram alterados!! Fique de olho em alterações suspeitas.
-            """)
+            embed = discord.Embed(
+                description=f'{before.mention} has been updated.',
+                color=discord.Color.blue()
+            )
+            if len(roles_added) >= 1:
+                embed.add_field(name='Roles Add', value='\n'.join(roles_added), inline=False)
+            if len(roles_removed):
+                embed.add_field(name='Roles Removed', value='\n'.join(roles_removed), inline=True)  
+
+            embed.set_footer(text=f'{before.guild.name} :P')
+            embed.set_thumbnail(url=before.avatar_url)
+            embed.set_author(name=before.guild.name, icon_url=before.guild.icon_url)
+
+            api_connection = APICommunicate()
+            response_values = await api_connection("GET", f"api/channel/?community={before.guild.id}", {})
+
+            if response_values.get("status", 0) == 200:
+                for response_item in response_values.get("values", []):
+                    if response_item.get("is_role_channel", False):
+                        msg_channel = await self.bot.fetch_channel(response_item.get("channel", 0)) 
+                
+                        await msg_channel.send(embed=embed)
+            else:
+                self.log.send_message(f"An error occurred while locating the community's channels. {before.guild.name}.", "error")            
 
     async def send_messge_adm(self, message:str) -> None:
         """Função responsável por enviar msgs de alerta para administradoes da comunidade a respeito de mudança no servidor.
@@ -156,6 +148,7 @@ class Eventos(commands.Cog):
         bot_guilds = self.bot.guilds
 
         api_connection = APICommunicate()
+        
         """Inserindo comunidades que o bot faz parte no banco."""
         for guild_item in bot_guilds:
             response_value = await api_connection("POST", "api/community/", json_content={
@@ -167,7 +160,7 @@ class Eventos(commands.Cog):
             if response_value.get("status", "") == 201:
                 await self.save_community_members(guild_item)
                 await self.save_community_channels(response_value.get("values",{}).get("id", None), guild_item)
-    
+
     async def save_community_channels(self, db_id, guild):
         api_connection = APICommunicate()
         for channel_info in guild.channels:
@@ -191,7 +184,8 @@ class Eventos(commands.Cog):
                 "position": int(channel_info.position),
                 "type": str(channel_info.type)              
                 })
-            
+                if response_value.get("status", 0) != 201:
+                    self.log.send_message(f"Status different when inserting channel {response_value.get('status', 0)}", "error")
 
     async def save_community_members(self, guild):
         api_connection = APICommunicate()
@@ -203,7 +197,8 @@ class Eventos(commands.Cog):
                 "descriminator": str(member_info.discriminator),
                 "is_bot": member_info.bot
             })
-
+            if response_value.get("status", 0) != 201:
+                self.log.send_message(f"Status diferente ao inserir canal {response_value.get('status', 0)}", "error")
             
 
 eventos_cog = Eventos

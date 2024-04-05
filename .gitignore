@@ -3,3 +3,5 @@ __pycache__/
 password.txt
 .env
 migrations/
+log.txt
+remover.html

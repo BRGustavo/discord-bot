@@ -3,10 +3,11 @@ from discord.ext import commands
 from app import eventos_cog, comandos_cog
 from dotenv import load_dotenv
 import os
+from app import block_verify
 
 load_dotenv()
-
 intents = discord.Intents.all()
+
 bot_gustavo = commands.Bot(command_prefix='!', intents=intents)
 
 @bot_gustavo.event

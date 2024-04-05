@@ -15,5 +15,5 @@ class MemberSerializer(serializers.ModelSerializer):
 class ChannelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Channel
-        fields = ['channel', 'name', 'topic', 'is_news']
+        fields = ["channel", "name", "topic", "is_news", "is_welcome_channel", "is_remove_channel", "is_role_channel"]
 
