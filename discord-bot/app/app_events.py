@@ -86,6 +86,9 @@ class Eventos(commands.Cog):
         if message.author == self.bot.user and ("Just joined the server From" in message.content or "Has joined the Zombie Survival Mode" in message.content):
             await message.channel.send("!m wb")
 
+        if message.author == self.bot.user and ("black?" in message.content.lower()):
+            await message.channel.send("!m ?")
+
         elif message.author == self.bot.user:
             return 
 
